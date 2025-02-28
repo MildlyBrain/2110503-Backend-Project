@@ -120,7 +120,10 @@ exports.addReservation = async (req, res, next) => {
         req.body.meetingRoom = req.params.meetingRoomId;
         const meetingRoom = await MeetingRoom.findById(
             req.params.meetingRoomId
-        );
+        ).populate({
+            path: "coworkingSpace",
+            select: "open_time close_time"
+        });
         if (!meetingRoom) {
             return res.status(404).json({
                 success: false,
@@ -147,7 +150,26 @@ exports.addReservation = async (req, res, next) => {
                 message: "Reservation start time must be before end time.",
             });
         }
-        
+
+        // Extract coworking space open-close times
+        const coworkingSpace = meetingRoom.coworkingSpace;
+        const { open_time, close_time } = coworkingSpace;
+        const reserveStart = new Date(req.body.reserveDateStart);
+        const reserveEnd = new Date(req.body.reserveDateEnd);
+        // Validate that reserveDateStart is before reserveDateEnd
+        if (reserveStart >= reserveEnd) {
+            return res.status(400).json({
+                success: false,
+                message: "Reservation start time must be before end time.",
+            });
+        }
+        // Check if reservation falls within coworking space open hours
+        if (reserveStart < open_time || reserveEnd > close_time) {
+            return res.status(400).json({
+                success: false,
+                message: `Reservation must be between ${open_time.toISOString()} and ${close_time.toISOString()}.`,
+            });
+        }
         //check if this room is already reserved by other reservation in same meetingRoom during the reserveDateStart and reserveDateEnd or not
         // ---fill code--
         const overlappingReservation = await Reservation.findOne({
