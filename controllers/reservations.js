@@ -140,6 +140,34 @@ exports.addReservation = async (req, res, next) => {
                 message: `The user with ID ${req.user.id} has already made 3 reservations`,
             });
         }
+        // Validate that reserveDateStart is before reserveDateEnd
+        if (new Date(req.body.reserveDateStart) >= new Date(req.body.reserveDateEnd)) {
+            return res.status(400).json({
+                success: false,
+                message: "Reservation start time must be before end time.",
+            });
+        }
+        
+        //check if this room is already reserved by other reservation in same meetingRoom during the reserveDateStart and reserveDateEnd or not
+        // ---fill code--
+        const overlappingReservation = await Reservation.findOne({
+            meetingRoom: req.body.meetingRoom,
+            $or: [
+                {
+                    reserveDateStart: { $lt: req.body.reserveDateEnd },
+                    reserveDateEnd: { $gt: req.body.reserveDateStart }
+                }
+            ]
+        });
+
+        if (overlappingReservation) {
+            return res.status(400).json({
+                success: false,
+                message: `The meeting room is already reserved from ${overlappingReservation.reserveDateStart} to ${overlappingReservation.reserveDateEnd}. Please choose another time slot.`,
+            });
+        }
+
+
 
         const reservation = await Reservation.create(req.body);
         res.status(201).json({
