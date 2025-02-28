@@ -15,7 +15,7 @@ exports.getReservations = async (req, res, next) => {
                 select: "roomNumber location",
                 populate: {
                     path: "coworkingSpace",
-                    select: "name addresss"
+                    select: "name addresss open_time close_time"
                 }
             }
         );
@@ -31,7 +31,7 @@ exports.getReservations = async (req, res, next) => {
                     select: "roomNumber location ",
                     populate: {
                         path: "coworkingSpace",
-                        select: "name addresss"
+                        select: "name addresss open_time close_time"
                     }
                 }
             );
@@ -42,7 +42,7 @@ exports.getReservations = async (req, res, next) => {
                     select: "roomNumber location",
                     populate: {
                         path: "coworkingSpace",
-                        select: "name addresss"
+                        select: "name addresss open_time close_time"
                     }
                 }
             );
@@ -77,7 +77,7 @@ exports.getReservation = async (req, res, next) => {
                 select: "roomNumber location",
                 populate: {
                     path: "coworkingSpace",
-                    select: "name addresss"
+                    select: "name addresss open_time close_time"
                 }
             }
         );
