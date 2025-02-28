@@ -1,5 +1,6 @@
 const MeetingRoom = require("../models/MeetingRoom");
 const Reservation = require("../models/Reservation");
+const CoworkingSpace = require("../models/CoworkingSpace");
 
 //@desc     Get all meetingRooms
 //@route    GET /api/meetingrooms
@@ -51,18 +52,46 @@ exports.getMeetingRooms = async (req, res, next) => {
             }).distinct("meetingRoom");
             console.log(reservedRooms);
 
-            // Add filtering condition to exclude reserved meeting rooms
-            filters._id = { $nin: reservedRooms };
+            // Define a fixed date for open/close time comparison
+            const fixedDate = "2025-04-19";
+
+            // Extract time in UTC and merge with fixed date
+            const adjustedStart = new Date(`${fixedDate}T${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}:00.000Z`);
+            const adjustedEnd = new Date(`${fixedDate}T${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}:00.000Z`);
+
+            console.log("Adjusted Start:", adjustedStart);
+            console.log("Adjusted End:", adjustedEnd);
+
+            // Get meeting rooms that are in coworking spaces that are closed during the requested reservation period
+            const closedCoworkingSpaces = await CoworkingSpace.find({
+                $or: [
+                    { open_time: { $gt: adjustedStart } },  // Requested start time is before open time
+                    { close_time: { $lt: adjustedEnd } }   // Requested end time is after close time
+                ]
+            }).distinct("_id");
+
+            console.log("Closed coworking spaces:", closedCoworkingSpaces);
+
+            // Get meeting rooms belonging to those coworking spaces
+            const unavailableRooms = await MeetingRoom.find({
+                coworkingSpace: { $in: closedCoworkingSpaces }
+            }).distinct("_id");
+
+            console.log("Unavailable meeting rooms:", unavailableRooms);
+
+            // Add filtering condition to exclude reserved and unavailable meeting rooms
+            filters._id = { $nin: reservedRooms};
+            filters.coworkingSpace = { $nin: closedCoworkingSpaces };
         }
 
         // Build query
         query = MeetingRoom.find(filters).populate({
             path: "coworkingSpace",
-            select: "name address",
+            select: "name address open_time close_time",
         });
-        
-        
-        
+
+
+
         // Select fields
         if (req.query.select) {
             const fields = req.query.select.split(",").join(" ");
@@ -76,7 +105,7 @@ exports.getMeetingRooms = async (req, res, next) => {
         } else {
             query = query.sort("-createdAt");
         }
-        
+
 
 
         // Pagination
