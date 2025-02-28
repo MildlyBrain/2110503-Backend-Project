@@ -46,9 +46,8 @@ exports.getMeetingRooms = async (req, res, next) => {
             // Find reservations that overlap with the requested date range
             const reservedRooms = await Reservation.find({
                 reserveDateEnd: { $gte: new Date() }, // Ignore past reservations
-                $or: [
-                    { reserveDateStart: { $lt: end }, reserveDateEnd: { $gt: start } } // Overlapping reservations
-                ]
+                reserveDateStart: { $lt: end },
+                reserveDateEnd: { $gt: start } // Overlapping reservations
             }).distinct("meetingRoom");
             console.log(reservedRooms);
 
