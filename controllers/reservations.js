@@ -151,11 +151,14 @@ exports.addReservation = async (req, res, next) => {
             });
         }
 
-        // Extract coworking space open-close times
-        const coworkingSpace = meetingRoom.coworkingSpace;
-        const { open_time, close_time } = coworkingSpace;
+        const getMinutesSinceMidnight = (date) => {
+            console.log(date.getUTCHours(), date.getUTCMinutes());
+            return date.getUTCHours() * 60 + date.getUTCMinutes();
+        };
+
         const reserveStart = new Date(req.body.reserveDateStart);
         const reserveEnd = new Date(req.body.reserveDateEnd);
+
         // Validate that reserveDateStart is before reserveDateEnd
         if (reserveStart >= reserveEnd) {
             return res.status(400).json({
@@ -163,11 +166,24 @@ exports.addReservation = async (req, res, next) => {
                 message: "Reservation start time must be before end time.",
             });
         }
+
+        // Extract coworking space open-close times
+        const { open_time, close_time } = meetingRoom.coworkingSpace;
+        console.log(open_time, close_time);
+
+        // Convert times to minutes since midnight
+        const openMinutes = getMinutesSinceMidnight(new Date(open_time));
+        const closeMinutes = getMinutesSinceMidnight(new Date(close_time));
+        const reserveStartMinutes = getMinutesSinceMidnight(reserveStart);
+        const reserveEndMinutes = getMinutesSinceMidnight(reserveEnd);
+
+        console.log(openMinutes, closeMinutes, reserveStartMinutes, reserveEndMinutes);
+
         // Check if reservation falls within coworking space open hours
-        if (reserveStart < open_time || reserveEnd > close_time) {
+        if (reserveStartMinutes < openMinutes || reserveEndMinutes > closeMinutes) {
             return res.status(400).json({
                 success: false,
-                message: `Reservation must be between ${open_time.toISOString()} and ${close_time.toISOString()}.`,
+                message: `Reservation must be between ${new Date(open_time).toTimeString().slice(0, 5)} and ${new Date(close_time).toTimeString().slice(0, 5)}.`,
             });
         }
         //check if this room is already reserved by other reservation in same meetingRoom during the reserveDateStart and reserveDateEnd or not
@@ -188,8 +204,6 @@ exports.addReservation = async (req, res, next) => {
                 message: `The meeting room is already reserved from ${overlappingReservation.reserveDateStart} to ${overlappingReservation.reserveDateEnd}. Please choose another time slot.`,
             });
         }
-
-
 
         const reservation = await Reservation.create(req.body);
         res.status(201).json({
@@ -229,7 +243,7 @@ exports.updateReservation = async (req, res, next) => {
             });
         }
 
-        reservation = await reservation.findByIdAndUpdate(
+        reservation = await Reservation.findByIdAndUpdate(
             req.params.id,
             req.body,
             {
