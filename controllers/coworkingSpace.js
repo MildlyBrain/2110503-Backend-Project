@@ -86,7 +86,7 @@ exports.getCoworkingSpaces = async (req, res, next) => {
 //@access   Public
 exports.getCoworkingSpace = async (req, res, next) => {
 	try {
-		const coworkingSpace = await CoworkingSpace.findById(req.params.id);
+		const coworkingSpace = await CoworkingSpace.findById(req.params.id).populate("meetingRooms");
 
 		if (!coworkingSpace) {
 			return res.status(400).json({ success: false });
