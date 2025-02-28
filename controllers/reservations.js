@@ -207,7 +207,7 @@ exports.updateReservation = async (req, res, next) => {
             });
         }
 
-        reservation = await Reservation.findByIdAndUpdate(
+        reservation = await reservation.findByIdAndUpdate(
             req.params.id,
             req.body,
             {
@@ -235,7 +235,6 @@ exports.updateReservation = async (req, res, next) => {
 exports.deleteReservation = async (req, res, next) => {
     try {
         const reservation = await Reservation.findById(req.params.id);
-
         if (!reservation) {
             return res.status(404).json({
                 success: false,
@@ -254,7 +253,7 @@ exports.deleteReservation = async (req, res, next) => {
             });
         }
 
-        await Reservation.deleteOne();
+        await reservation.deleteOne();
 
         res.status(200).json({
             success: true,
