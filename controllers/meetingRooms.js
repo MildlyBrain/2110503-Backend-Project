@@ -80,7 +80,18 @@ exports.getMeetingRooms = async (req, res, next) => {
 
             // Add filtering condition to exclude reserved and unavailable meeting rooms
             filters._id = { $nin: reservedRooms};
-            filters.coworkingSpace = { $nin: closedCoworkingSpaces };
+
+            
+           // Check if filtering by coworkingSpaceId
+            if (req.params.coworkingSpaceId)
+                filters.coworkingSpace = {
+                    $eq: req.params.coworkingSpaceId, 
+                    $nin: closedCoworkingSpaces 
+            };
+            else
+                filters.coworkingSpace = {
+                    $nin: closedCoworkingSpaces 
+            };
         }
 
         // Build query
