@@ -71,22 +71,14 @@ exports.getMeetingRooms = async (req, res, next) => {
 
             console.log("Closed coworking spaces:", closedCoworkingSpaces);
 
-            // Get meeting rooms belonging to those coworking spaces
-            const unavailableRooms = await MeetingRoom.find({
-                coworkingSpace: { $in: closedCoworkingSpaces }
-            }).distinct("_id");
-
-            console.log("Unavailable meeting rooms:", unavailableRooms);
-
             // Add filtering condition to exclude reserved and unavailable meeting rooms
             filters._id = { $nin: reservedRooms};
-
-            
-           // Check if filtering by coworkingSpaceId
+           // Check if also filtered by coworkingSpaceId
             if (req.params.coworkingSpaceId)
                 filters.coworkingSpace = {
                     $eq: req.params.coworkingSpaceId, 
                     $nin: closedCoworkingSpaces 
+                    // filter closed coworkingspace
             };
             else
                 filters.coworkingSpace = {

@@ -183,7 +183,7 @@ exports.addReservation = async (req, res, next) => {
         if (reserveStartMinutes < openMinutes || reserveEndMinutes > closeMinutes) {
             return res.status(400).json({
                 success: false,
-                message: `Reservation must be between ${new Date(open_time).toTimeString().slice(0, 5)} and ${new Date(close_time).toTimeString().slice(0, 5)}.`,
+                message: `Reservation must be between ${new Date(open_time).toISOString().slice(11, 16)} and ${new Date(close_time).toISOString().slice(11, 16)}.`,
             });
         }
         //check if this room is already reserved by other reservation in same meetingRoom during the reserveDateStart and reserveDateEnd or not
@@ -197,13 +197,13 @@ exports.addReservation = async (req, res, next) => {
                 }
             ]
         });
-
         if (overlappingReservation) {
             return res.status(400).json({
                 success: false,
-                message: `The meeting room is already reserved from ${overlappingReservation.reserveDateStart} to ${overlappingReservation.reserveDateEnd}. Please choose another time slot.`,
+                message: `The meeting room is already reserved from ${overlappingReservation.reserveDateStart.toISOString().slice(11, 16)} to ${overlappingReservation.reserveDateEnd.toISOString().slice(11, 16)}. Please choose another time slot.`,
             });
         }
+
 
         const reservation = await Reservation.create(req.body);
         res.status(201).json({
