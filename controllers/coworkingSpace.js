@@ -72,7 +72,7 @@ exports.getCoworkingSpaces = async (req, res, next) => {
 		res.status(200).json({
 			success: true,
 			count: coWorkingSpaces.length,
-			// pagination,
+			pagination,
 			data: coWorkingSpaces,
 		});
 	} catch (error) {

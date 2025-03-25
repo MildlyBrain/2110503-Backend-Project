@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
+const cors = require("cors");
 
 // route files
 const auth = require("./routes/auth");
@@ -18,6 +19,7 @@ const app = express();
 // use libs
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 
 // use routes
 app.use("/api/meetingrooms", meetingRooms);
